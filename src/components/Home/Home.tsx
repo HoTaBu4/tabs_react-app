@@ -3,7 +3,7 @@ import Sortable from 'sortablejs';
 import ListItem from './listItem';
 import { Outlet } from 'react-router-dom';
 import DropDown from './dropDown';
-import { initialSavedTabs, initialTabs } from '../../data/tabs';
+import { initialTabs } from '../../data/tabs';
 
 interface TabItem {
   id: number;
@@ -16,10 +16,12 @@ const Home: React.FC = () => {
   const savedTabsRef = useRef<HTMLDivElement | null>(null);
   const [tabs, setTabs] = useState<TabItem[]>([]);
   const [savedTabs, setSavedTabs] = useState<TabItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const savedOrder = localStorage.getItem('tabsOrder');
     const savedTabsOrder = localStorage.getItem('savedTabsOrder');
+
     if (savedOrder) {
       setTabs(JSON.parse(savedOrder));
     } else {
@@ -44,7 +46,9 @@ const Home: React.FC = () => {
           pull: 'clone',
           put: false
         },
+        onStart: () => setIsDragging(true),
         onEnd: (event) => {
+          setIsDragging(false); 
           const updatedSavedTabs = [...savedTabs];
 
           const [item] = updatedSavedTabs.splice(event.oldIndex!, 1);
@@ -71,7 +75,9 @@ const Home: React.FC = () => {
           pull: 'clone',
           put: false
         },
+        onStart: () => setIsDragging(true),
         onEnd: (event) => {
+          setIsDragging(false); 
           const updatedTabs = [...tabs];
 
           const [item] = updatedTabs.splice(event.oldIndex!, 1);
@@ -87,18 +93,48 @@ const Home: React.FC = () => {
       };
     }
   }, [tabs])
+  const handletoggleItem = (item: TabItem, toSave: boolean) => {
+    if (toSave) {
+      const updatedTabs = tabs.filter((tab) => tab.id !== item.id);
+      const updatedSavedTabs = [...savedTabs, {...item,save: true}];
+
+      setTabs(updatedTabs);
+      setSavedTabs(updatedSavedTabs);
+      localStorage.setItem('tabsOrder', JSON.stringify(updatedTabs));
+      localStorage.setItem('savedTabsOrder', JSON.stringify(updatedSavedTabs));
+    } else {
+      const updatedSavedTabs = savedTabs.filter((tab) => tab.id !== item.id);
+      const updatedTabs = [...tabs, {...item,save: false}];
+
+      setTabs(updatedTabs);
+      setSavedTabs(updatedSavedTabs);
+      localStorage.setItem('tabsOrder', JSON.stringify(updatedTabs));
+      localStorage.setItem('savedTabsOrder', JSON.stringify(updatedSavedTabs));
+    }
+  };
+  
 
   return (
     <div className=' w-1/1 box-border'>
       <div className="flex flex-row w-1/1 h-[48px] border-[#AEB6CE33] border-[1px]">
         <div ref={savedTabsRef} className='flex flex-row'>
           {savedTabs.map((tab, i) => (
-            <ListItem key={`${tab.id}-${i}`} text={tab.text} saved={tab.save}/>
+            <ListItem 
+              key={`${tab.id}-${i}`} 
+              item={tab} 
+              handletoggleItem={handletoggleItem}
+              isDragging={isDragging}
+            />
           ))}
         </div>
         <div ref={tabsrRef} className='flex flex-row'>
           {tabs.map((tab, i) => (
-            <ListItem key={`${tab.id}-${i}`} text={tab.text} saved={tab.save}/>
+            <ListItem 
+              key={`${tab.id}-${i}`} 
+              item={tab} 
+              handletoggleItem={handletoggleItem} 
+              isDragging={isDragging}
+            />
           ))}
         </div>
         <DropDown />

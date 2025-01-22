@@ -24,14 +24,11 @@ export default {
       sans: ["Graphik", "sans-serif"],
       serif: ["Merriweather", "serif"],
     },
-    extend: {
-      spacing: {
-        128: "32rem",
-        144: "36rem",
-      },
-      borderRadius: {
-        "4xl": "2rem",
-      },
+    fontFamily: {
+      poppins: ['Poppins', 'sans-serif'],
+    },
+    fontSize: {
+      base: ['14px', '23.1px'],
     },
   },
   plugins: [],

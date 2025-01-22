@@ -6,8 +6,8 @@ export const initialTabs = [
 ];
 
 export const initialSavedTabs = [
-  { id: 1, text: 'lol 1sd', save: true },
-  { id: 2, text: 'lol asasd', save: true },
-  { id: 3, text: 'lol asc', save: true },
-  { id: 4, text: 'lol sdf', save: true },
+  { id: 5, text: 'lol 1sd', save: true },
+  { id: 6, text: 'lol asasd', save: true },
+  { id: 7, text: 'lol asc', save: true },
+  { id: 8, text: 'lol sdf', save: true },
 ];
