@@ -3,50 +3,76 @@ import Sortable from 'sortablejs';
 import ListItem from './listItem';
 import { Outlet } from 'react-router-dom';
 import DropDown from './dropDown';
+import { initialSavedTabs, initialTabs } from '../../data/tabs';
 
 interface TabItem {
   id: number;
   text: string;
-  save: boolean;  // Add privilege property to each item
+  save: boolean; 
 }
 
 const Home: React.FC = () => {
   const tabsrRef = useRef<HTMLDivElement | null>(null);
+  const savedTabsRef = useRef<HTMLDivElement | null>(null);
   const [tabs, setTabs] = useState<TabItem[]>([]);
-  const lol = [
-    { id: 1, text: 'lol 1', save: false },
-    { id: 2, text: 'lol 2', save: false },
-    { id: 6, text: 'lol 4', save: false },
-    { id: 7, text: 'lol 5', save: false },
-  ];
+  const [savedTabs, setSavedTabs] = useState<TabItem[]>([]);
 
   useEffect(() => {
     const savedOrder = localStorage.getItem('tabsOrder');
+    const savedTabsOrder = localStorage.getItem('savedTabsOrder');
     if (savedOrder) {
       setTabs(JSON.parse(savedOrder));
     } else {
-      setTabs(lol);
+      setTabs(initialTabs);
+    }
+
+    if (savedTabsOrder) {
+      setSavedTabs(JSON.parse(savedTabsOrder));
+    } else {
+      setSavedTabs(initialTabs);
     }
   }, []);
 
   useEffect(() => {
-    // Sort tabs by privilege with privileged items first
-    const sortedTabs = [...tabs].sort((a, b) => b.save ? -1 : 0);
+    if (savedTabsRef.current) {
+      const sortableSaved = new Sortable(savedTabsRef.current, {
+        animation: 150,
+        delay: 2000,
+        delayOnTouchOnly: true,
+        group: {
+          name: 'shared',
+          pull: 'clone',
+          put: false
+        },
+        onEnd: (event) => {
+          const updatedSavedTabs = [...savedTabs];
 
+          const [item] = updatedSavedTabs.splice(event.oldIndex!, 1);
+          updatedSavedTabs.splice(event.newIndex!, 0, item);
+
+          setSavedTabs(updatedSavedTabs);
+          localStorage.setItem('savedTabsOrder', JSON.stringify(updatedSavedTabs));
+        },
+      });
+
+      return () => {
+        sortableSaved.destroy();
+      };
+    }
+  }, [savedTabs]); 
+  useEffect(() => {
     if (tabsrRef.current) {
       const sortable = new Sortable(tabsrRef.current, {
         animation: 150,
         delay: 2000,
         delayOnTouchOnly: true,
-        group: 'shared',
+        group: {
+          name: 'shared',
+          pull: 'clone',
+          put: false
+        },
         onEnd: (event) => {
-          const updatedTabs = [...sortedTabs];
-          const movedItem = updatedTabs[event.oldIndex!];
-
-          if (movedItem.save && event.from !== event.to) {
-            console.log('Cannot move privileged items outside their group');
-            return; // Do not move
-          }
+          const updatedTabs = [...tabs];
 
           const [item] = updatedTabs.splice(event.oldIndex!, 1);
           updatedTabs.splice(event.newIndex!, 0, item);
@@ -60,11 +86,16 @@ const Home: React.FC = () => {
         sortable.destroy();
       };
     }
-  }, [tabs]);
+  }, [tabs])
 
   return (
     <div className=' w-1/1 box-border'>
       <div className="flex flex-row w-1/1 h-[48px] border-[#AEB6CE33] border-[1px]">
+        <div ref={savedTabsRef} className='flex flex-row'>
+          {savedTabs.map((tab, i) => (
+            <ListItem key={`${tab.id}-${i}`} text={tab.text} saved={tab.save}/>
+          ))}
+        </div>
         <div ref={tabsrRef} className='flex flex-row'>
           {tabs.map((tab, i) => (
             <ListItem key={`${tab.id}-${i}`} text={tab.text} saved={tab.save}/>
